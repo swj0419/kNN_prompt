@@ -250,8 +250,7 @@ def load_examples_hellaswag(path):
 def load_examples_rotten_tomatoes(path, args):
     hypotheses = [' negative', ' positive']
     label_list = [' terrible', ' great']
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
-    # label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names.txt"
+    label_path = "./task_data/sst2/label_names_sentidict.txt"
     label2synonym = load_label(label_path)
     prompt = " It was"
 
@@ -311,295 +310,6 @@ def load_examples_rotten_tomatoes(path, args):
 
 
 
-
-
-def load_examples_yelp(path, args):
-    hypotheses = [' negative', ' positive']
-    # hypotheses = [' negative', ' positive']
-    label_list = [' terrible', ' great']
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
-    label2synonym = load_label(label_path)
-    prompt = " It was"
-
-    '''
-    load train examples
-    '''
-    icl_str = ""
-    train_path = path.replace("dev", "train")
-    train_path = train_path.replace("test", "train")
-    if args.k_shot > 0:
-        train_examples = []
-        with open(train_path, 'r') as json_file:
-            json_list = list(json_file)
-
-        for row in json_list:
-            row = json.loads(row)
-            label_str = " " + row["output"]
-            label = hypotheses.index(label_str)
-            summary = row["input"]
-            premise = f'{summary}{prompt}'
-            options = []
-            for h in label_list:
-                o = {}
-                o['premise'] = premise
-                o['hypothesis'] = h.lower()
-                o['uncond_premise'] = prompt
-                o['uncond_hypothesis'] = h.lower()
-                options.append(o)
-            similarity = float(row["similarity"]) if "similarity" in row else None
-            train_examples.append({'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym, 'label_list': label_list})
-        icl_str = construct_icl_examples(train_examples, k=args.k_shot)
-
-    examples = []
-    with open(path, 'r') as json_file:
-        json_list = list(json_file)
-
-        for row in json_list:
-            row = json.loads(row)
-            label_str = " " + row["output"]
-            label = hypotheses.index(label_str)
-            summary = row["input"]
-            premise = f'{summary}{prompt}'
-            options = []
-            for h in label_list:
-                o = {}
-                o['premise'] = icl_str + premise
-                o['knn_premise'] = premise
-                o['hypothesis'] = h.lower()
-                o['uncond_premise'] = prompt
-                o['uncond_hypothesis'] = h.lower()
-                options.append(o)
-            similarity = float(row["similarity"]) if "similarity" in row else None
-            examples.append({'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym, 'label_list': label_list})
-        print("examples: ", examples[0]['options'][0]['premise'])
-    return examples
-
-#
-# def load_examples_yelp_full(path, args):
-#     hypotheses = [" terrible", " bad", " okay", " good", " great"]
-#     # label_path = "/gscratch/zlab/swj0419/knnlm/data/final/financial_phrasebank/label_names.txt"
-#     label2synonym = {0: " terrible",
-#                      1: " bad",
-#                      2: " okay",
-#                      3: " good",
-#                      4: " great"}
-#     prompt = " It was"
-#
-#     '''
-#     load train examples
-#     '''
-#     icl_str = ""
-#     train_path = path.replace("dev", "train")
-#     train_path = train_path.replace("test", "train")
-#     if args.k_shot > 0:
-#         train_examples = []
-#         with open(train_path, 'r') as json_file:
-#             json_list = list(json_file)
-#
-#         for row in json_list:
-#             row = json.loads(row)
-#             label = int(row["output"])-1
-#             summary = row["input"]
-#             premise = f'{summary}{prompt}'
-#             options = []
-#             for h in hypotheses:
-#                 o = {}
-#                 o['premise'] = premise
-#                 o['hypothesis'] = h.lower()
-#                 o['uncond_premise'] = prompt
-#                 o['uncond_hypothesis'] = h.lower()
-#                 options.append(o)
-#             similarity = float(row["similarity"]) if "similarity" in row else None
-#             train_examples.append({'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym, 'label_list': hypotheses})
-#         icl_str = construct_icl_examples(train_examples, k=args.k_shot)
-#
-#     examples = []
-#     with open(path, 'r') as json_file:
-#         json_list = list(json_file)
-#
-#         for row in json_list:
-#             row = json.loads(row)
-#             label = int(row["output"])-1
-#             summary = row["input"]
-#             premise = f'{summary}{prompt}'
-#             options = []
-#             for h in hypotheses:
-#                 o = {}
-#                 o['premise'] = icl_str + premise
-#                 o['knn_premise'] = premise
-#                 o['hypothesis'] = h.lower()
-#                 o['uncond_premise'] = prompt
-#                 o['uncond_hypothesis'] = h.lower()
-#                 options.append(o)
-#             similarity = float(row["similarity"]) if "similarity" in row else None
-#             examples.append({'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym,
-#                                    'label_list': hypotheses})
-#         print("examples: ", examples[0]['options'][0]['premise'])
-#     return examples
-
-
-
-# def load_examples_lama(path):
-#     def load_lama(which_lama):
-#         ### Load test data
-#         with open(f'{path}/original_rob/P{which_lama}/test.jsonl', 'r') as json_file:
-#             json_list = list(json_file)
-#         all_y_test = []
-#         all_x_test = []
-#         for json_str in json_list:
-#             json_str = fix_text(json_str)
-#             try:
-#                 result = json.loads(json_str)
-#             except:
-#                 print(f'{path}/original_rob/P{which_lama}/test.jsonl')
-#                 continue
-#             all_y_test.append(result['obj_label'])
-#             all_x_test.append(result['sub_label'])
-#
-#         with open(f'{path}/relations.jsonl', 'r') as json_file:
-#             json_list = list(json_file)
-#         template = None
-#         for json_str in json_list:
-#             result = json.loads(json_str)
-#             idx = int(result['relation'][1:])
-#             if idx == which_lama:
-#                 template = result['template']
-#                 x_pos = template.find('[X]')
-#                 y_pos = template.find('[Y]')
-#                 assert (x_pos >= 0) and (y_pos >= 0), "placeholder not found"
-#                 if x_pos > y_pos:
-#                     print("Not auto-regressive, skip")
-#                     template = "INVALID"
-#                 break
-#         return all_x_test, all_y_test, template
-#
-#     def prompt_func(test_sentence, template):
-#         seg1 = template[0:x_pos]
-#         seg2 = template[x_pos + 3:y_pos]
-#         prompt = f"{seg1}{test_sentence}{seg2}"[:-1]
-#         return prompt
-#
-#     examples = []
-#     all_lamas = [1001,101,103,106,108,127,1303,131,136,1376,138,140,1412,159,17,176,178,19,
-#                  190,20,264,27,276,279,30,31,36,361,364,37,39,407,413,449,463,47,495,527,530,740,937]
-#
-#     for which_lama in all_lamas:
-#         x_test, y_test, template = load_lama(which_lama)
-#         x_pos = template.find('[X]')
-#         y_pos = template.find('[Y]')
-#         for test_sentence, test_label in zip(x_test, y_test):
-#             prompt = prompt_func(test_sentence, template)
-#             examples.append({'input': prompt,'label': test_label, "template": template})
-#     return examples
-
-
-def load_examples_lama(path, args):
-    # label_path = "/gscratch/zlab/swj0419/knnlm/data/final/financial_phrasebank/label_names.txt"
-    label2synonym = {}
-    label2synonym_list = []
-    prompt = ""
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-
-    '''
-    load train examples
-    '''
-    icl_str = ""
-    train_path = path.replace("dev", "train")
-    train_path = train_path.replace("test", "train")
-    if args.k_shot > 0:
-        train_examples = []
-        with open(train_path, 'r') as json_file:
-            json_list = list(json_file)
-
-        for row in json_list:
-            row = json.loads(row)
-            summary = row["input"]
-            if summary.endswith(" [MASK] ."):
-                summary = summary.replace(" [MASK] .", "")
-            else:
-                continue
-            label_str = " " + row["output"]
-            if len(tokenizer(label_str)["input_ids"]) > 1:
-                continue
-
-            if label_str not in label2synonym_list:
-                label2synonym_list.append(label_str)
-                label = len(label2synonym_list) - 1
-            else:
-                label = label2synonym_list.index(label_str)
-
-            premise = f'{summary}{prompt}'
-            options = []
-            for h in label2synonym_list:
-                o = {}
-                o['premise'] = premise
-                o['hypothesis'] = h.lower()
-                o['uncond_premise'] = ""
-                o['uncond_hypothesis'] = h.lower()
-                options.append(o)
-            similarity = float(row["similarity"]) if "similarity" in row else None
-            train_examples.append({'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym, 'label_list': label2synonym_list})
-        icl_str = construct_icl_examples(train_examples, k=args.k_shot)
-
-    with open(path, 'r') as json_file:
-        json_list = list(json_file)
-        for row in json_list:
-            row = json.loads(row)
-            summary = row["input"]
-            if summary.endswith(" [MASK] ."):
-                summary = summary.replace(" [MASK] .", "")
-            else:
-                continue
-            label_str = " " + row["output"]
-            if len(tokenizer(label_str)["input_ids"]) > 1:
-                continue
-            if label_str not in label2synonym_list:
-                label2synonym_list.append(label_str)
-
-    print("icl_str: ", icl_str)
-    label2synonym = {k: [v] for k, v in enumerate(label2synonym_list)}
-    examples = []
-    with open(path, 'r') as json_file:
-        json_list = list(json_file)
-
-        for row in json_list:
-            row = json.loads(row)
-            summary = row["input"]
-            if summary.endswith(" [MASK] ."):
-                summary = summary.replace(" [MASK] .", "")
-            else:
-                continue
-            label_str = " " + row["output"]
-            # print("label_str: ", label_str, tokenizer(label_str))
-            if len(tokenizer(label_str)["input_ids"]) > 1:
-                continue
-
-            if label_str not in label2synonym_list:
-                label2synonym_list.append(label_str)
-                label = len(label2synonym_list) - 1
-            else:
-                label = label2synonym_list.index(label_str)
-
-            premise = f'{summary}{prompt}'
-            options = []
-            for h in label2synonym_list:
-                o = {}
-                o['premise'] = icl_str + premise
-                o['knn_premise'] = premise
-                o['hypothesis'] = h.lower()
-                o['uncond_premise'] = " It is"
-                o['uncond_hypothesis'] = h.lower()
-                options.append(o)
-            similarity = float(row["similarity"]) if "similarity" in row else None
-            examples.append(
-                {'options': options, 'label': label, "sim": similarity, 'label2synonym': label2synonym, 'label_list': label2synonym_list})
-    print("examples: ", examples[0]['options'][0]['premise'])
-    return examples
-
-
-
-
-
 def load_examples_cqa(path, return_tuple=False):
     examples = []
     with open(path) as f:
@@ -624,130 +334,6 @@ def load_examples_cqa(path, return_tuple=False):
                                            'uncond_premise': ' the answer is:',
                                            'uncond_hypothesis': ' "{}"'.format(c['text'].lower())} for c in d['question']['choices']], 
                           'label':label}]
-
-    return examples
-
-def load_examples_arc(path):
-    idx2abc = { 0 : 'A', 1 : 'B', 2 : 'C', 3 : 'D', 4 : 'E' }
-    abc2idx = { 'A' : 0, 'B' : 1, 'C' : 2, 'D' : 3, 'E' : 4, '1' : 0, '2' : 1, '3' : 2, '4' : 3, '5' : 4 }
-    
-    examples = []
-    with open(path) as lines:
-        for line in lines:
-            j = json.loads(line)
-            d = {}
-
-            final_label = j['answerKey']
-            correct_hypothesis = abc2idx[final_label]
-            q = j['question']
-            stem = q['stem']
-            choices = q['choices']
-            hypotheses = []
-            for idx, choice in enumerate(choices):
-                text = choice['text']
-                label = choice['label']
-                assert(abc2idx[label] == idx)
-                hypotheses.append(text)
-
-            d['premise'] = stem
-            d['hypotheses'] = hypotheses
-            d['correct_hypothesis'] = correct_hypothesis
-
-            d['stem'] = stem
-            d['answers'] = choices
-            d['label'] = final_label
-
-            premise = d['premise']
-            options = []
-            for h in d['hypotheses']:
-                o = {}
-                h = ' ' + h
-                o['premise'] = premise
-                o['hypothesis'] = h
-                o['uncond_premise'] = ' the answer is:'
-                o['uncond_hypothesis'] = h
-                options.append(o)
-            label = d['correct_hypothesis']
-            examples.append({'options' : options, 'label' : label })
-
-    return examples
-
-def load_examples_race(path, split, version):
-    conversion = { 'A' : 0, 'B' : 1, 'C' : 2, 'D' : 3, 'E' : 4, 'F' : 5 }
-
-    examples = []
-
-
-    files = [f for f in os.listdir(path=path + '{}/{}'.format(split,version)) if f.endswith('.txt')]
-    for f in files:
-        with open(path + '{}/{}/{}'.format(split,version, f)) as lines, open(sys.argv[2], 'w') as out:
-            for line in lines:
-                j = json.loads(line)
-
-                context_id = j['id']
-                context = j['article']
-                ps = j['questions']
-                hs = j['options']
-                cs = j['answers']
-                for p, h, c in zip(ps, hs, cs):
-                    d = {}
-
-                    premise = p.strip()
-                    post_period = False
-                    if '_' in premise:
-                        idx = premise.index('_')
-                        premise = premise[:idx].strip()
-                        if p[-1] == '.':
-                            post_period  = True
-                            premise = f'{context}\n\nExplanation: {premise}'
-                        elif p[-1] == '?':
-                            premise = f'{context}\n\nQuestion: {premise}\n\nAnswer:'
-                    elif premise[-1] == '?':
-                        premise = f'{context}\n\nQuestion: {premise}\n\nAnswer:'
-                    else:
-                        premise = f'{context}\n\n{premise}'
-
-                    d['premise'] = premise
-
-                    hypotheses = [ f' {hypothesis}' for hypothesis in h ]
-                    d['hypotheses'] = hypotheses
-
-                    correct_hypothesis = conversion[c]
-                    d['correct_hypothesis'] = correct_hypothesis
-
-                    post_hypothesis = '.' if post_period else ''
-                    d['post_hypothesis'] = post_hypothesis
-
-                    d['context_id'] = context_id
-                    d['context'] = context
-
-                    d['question'] = p
-
-                    ## this (below) is from the jsonl to examples file
-
-                    context = d['context'].strip() 
-                    question = d['question'].strip()
-                    if question[0] == '.':
-                        question = question[1:]
-                    options = []
-                    for h in d['hypotheses']:
-                        o = {}
-                        if '_' in question:
-                            u_idx = question.find('_') 
-                            premise = f' {context}\n {question[:u_idx].strip()}'
-                            h = f' {h} {question[u_idx+1:].strip()}'
-                            uncond_premise = '?'
-                        else:
-                            premise = f' {context}\n question: {question} \n answer:'
-                            uncond_premise = '?'
-                            h = f' {h}'
-                        o['premise'] = premise
-                        o['hypothesis'] = h
-                        o['uncond_premise'] = uncond_premise
-                        o['uncond_hypothesis'] = h
-                        options.append(o)
-                    label = d['correct_hypothesis']
-                    examples.append({'options': options, 'label' : label })
 
     return examples
 
@@ -858,63 +444,10 @@ def load_examples_cb(path, args):
     return examples
 
 
-def load_examples_snli(path):
-    data = []
-    with open(path) as f:
-        for line in f:
-            data += [json.loads(line)]
-
-    examples = []
-    for d in data:
-        premise = f" question: Given that \"{d['sent1']}\" Is \"{d['sent2']}\" true, false, or neither?\n answer:"
-        options = []
-        for h in [' true', ' false', ' neither']:
-            o = {}
-            o['premise'] = premise
-            o['knn_premise'] = premise
-            o['hypothesis'] = h
-            o['uncond_premise'] = ' true, false, or neither?\n answer:'
-            o['uncond_hypothesis'] = h
-            options.append(o)
-        label = d['correct_hypothesis']
-        examples.append({'options' : options, 'label' : label })
-    return examples
-
-
-
-def load_examples_sst5(path):
-    data = []
-    with open(path) as f:
-        for line in f:
-            l, s = line.strip().split('\t')
-            label = int(l[-1])
-            d = {}
-            d['correct_hypothesis'] = label-1
-            d['sentence'] = s
-            data.append(d)
-
-    examples = []
-    for d in data:
-        premise = f"\"{d['sentence']}\" has a tone that is"
-        options = []
-        for h in [' very negative.', ' somewhat negative.', ' neutral.', ' somewhat positive.', ' very positive.']:
-            o = {}
-            h = h + '<|endoftext|>'
-            o['premise'] = premise
-            o['hypothesis'] = h
-            o['uncond_premise'] = ' The quote has a tone that is'
-            o['uncond_hypothesis'] = h
-            options.append(o)
-        label = d['correct_hypothesis']
-        examples.append({'options' : options, 'label' : label })
-    return examples
-
-
 def load_examples_sst2(path, args):
     # hypotheses = [' bad', ' good']
     label_list = [' terrible', ' great']
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
-    # label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names.txt"
+    label_path = "./task_data/sst2/label_names_sentidict.txt"
 
     label2synonym = load_label(label_path)
     prompt = " It was"
@@ -1164,7 +697,7 @@ def load_examples_imdb(path):
     # label2synonym = {0: [' hated', " hate", " disliked", 'hate'], 1: [' liked', " like", " love"]}
     # label2synonym = {0: [' awful', ' bad', ' stupid', ' worse', ' worst', ' mediocre', ' pointless', ' forgotten',  ' terrible', ' boring', ' awful', " poor", " horrible", " misleading"], 1: [' recommended', ' enjoyable', ' awesome', ' engaging', ' better', ' great', ' good',  ' nice', ' exciting', ' excellent']}
     # label2synonym = {0: [' bad'], 1: [' good']}
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
+    label_path = "./task_data/sst2/label_names_sentidict.txt"
     label2synonym = load_label(label_path)
     # label2synonym = {0: [' bad'], 1: [' good']}
 
@@ -1192,8 +725,7 @@ def load_examples_cr(path, args):
     hypotheses = [' negative', ' positive']
     label_list = [' terrible', ' great']
 
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
-    # label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names.txt"
+    label_path = "./task_data/sst2/label_names_sentidict.txt"
 
     label2synonym = load_label(label_path)
     prompt = " It was"
@@ -1259,8 +791,7 @@ def load_examples_mr(path, args):
     # hypotheses = [' terrible', ' great']
     hypotheses = [' terrible', ' great']
 
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names_sentidict.txt"
-    # label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/imdb/label_names.txt"
+    label_path = "./task_data/sst2/label_names_sentidict.txt"
     label2synonym = load_label(label_path)
 
     prompt = " It was" # My overall feeling was that the movie was
@@ -1346,7 +877,7 @@ def load_examples_yahoo(path, args):
     label_list = [" society", " science", " health", " education", " computer", " sports", " business", " entertainment", " family", " politics"]
 
     label2synonym = {}
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/final/yahoo/label.json"
+    label_path = "./task_data/yahoo/label.json"
     with open(label_path, "r") as f:
         topic2synonym = json.load(f)
 
@@ -1412,7 +943,7 @@ def load_examples_yahoo(path, args):
 def load_examples_agn(path, args):
     # topics = [' politics', ' sports', ' business', ' technology']
     topics = [' world', ' sports', ' business', ' science']
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/agnews/label_names_kb.txt"
+    label_path = "./task_data/agn/label_names_kb.txt"
     # label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/agnews/label_names.txt"
     label2synonym = load_label(label_path)
     # prompt = " The text topic is about"
@@ -1467,88 +998,6 @@ def load_examples_agn(path, args):
     return examples
 
 
-def load_examples_dbpedia(path):
-    hypotheses = (
-        " company",
-        " school",
-        " artist",
-        " athlete",
-        " politics",
-        " transportation",
-        " building",
-        " river",
-        " village",
-        " animal",
-        " plant",
-        " album",
-        " film",
-        " book"
-    )
-    label_path = "/gscratch/zlab/swj0419/knnlm/data/label_word/datasets/dbpedia/label_names_kb.txt"
-    label2synonym = load_label(label_path)
-    prompt =" The topic of a text is"
-    examples = []
-    with open(path) as fp:
-        reader = csv.DictReader(fp)
-        for row in reader:
-            d = {}
-            label = int(row['Class'])-1
-            lmname = hypotheses[label]
-            premise = f"{row['Text']}{prompt}"
-            options = []
-            for h in hypotheses:
-                o = {}
-                o['premise'] = premise
-                o['knn_premise'] = premise
-                o['hypothesis'] = h
-                o['uncond_premise'] = prompt
-                o['uncond_hypothesis'] = h
-                options.append(o)
-            examples.append({'options' : options, 'label' : label, 'label2synonym': label2synonym, 'label_list': hypotheses})
-    return examples
-
-def load_examples_obqa(path):
-    with open(path) as lines:
-        idx2abc = { 0 : 'A', 1 : 'B', 2 : 'C', 3 : 'D' }
-        abc2idx = { 'A' : 0, 'B' : 1, 'C' : 2, 'D' : 3 }
-
-        examples = []
-        for line in lines:
-            j = json.loads(line)
-            d = {}
-
-            label = j['answerKey']
-            correct_hypothesis = abc2idx[label]
-            q = j['question']
-            stem = q['stem']
-            choices = q['choices']
-            hypotheses = []
-            for idx, choice in enumerate(choices):
-                text = choice['text']
-                label = choice['label']
-                assert(abc2idx[label] == idx)
-                hypotheses.append(text)
-
-            d['premise'] = stem
-            d['hypotheses'] = hypotheses
-            d['correct_hypothesis'] = correct_hypothesis
-
-            d['stem'] = stem
-            d['answers'] = choices
-            d['label'] = label
-            premise = d['premise']
-            options = []
-            for h in d['hypotheses']:
-                o = {}
-                h = ' ' + h
-                o['premise'] = premise
-                o['hypothesis'] = h
-                o['uncond_premise'] = ' the answer is:'
-                o['uncond_hypothesis'] = h
-                options.append(o)
-            label = d['correct_hypothesis']
-            examples.append({'options' : options, 'label' : label})
-    return examples
 
 
 def proc_passage(s):

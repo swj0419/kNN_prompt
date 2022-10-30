@@ -35,23 +35,25 @@ Hyperparameters for tuning: knn_temp (temperature for knn distribution) and k (n
 raw_file=wikitext-103
 knn_model=gpt2-large
 dataset=rte
-k=2000
-knn_temp=10
+k=1600
+knn_temp=3
 
-python main.py \
---model gpt2-large \
---knn_model ${knn_model} \
---n_sample 3000 \
---dimension 768 \
---raw_file ${raw_file} \
---dstore_dir ./${raw_file} \
---indexfile ./${raw_file}/knn.index \
---dataset_dir ./task_data/$dataset \
---k $k \
---dataset_name $dataset \
---batch_size 5 \
---knn_temp ${knn_temp} \
---k_shot 0
+ python main.py \
+    --model gpt2-large \
+    --knn_model ${knn_model} \
+    --n_sample 1000000 \
+    --dimension 1280 \
+    --raw_file ${raw_file} \
+    --dstore_dir /gscratch/zlab/swj0419/knnlm/data/checkpoints/${knn_model}/${raw_file} \
+    --indexfile /gscratch/zlab/swj0419/knnlm/data/checkpoints/${knn_model}/${raw_file}/knn.index \
+    --dataset_dir /gscratch/zlab/swj0419/knnlm/data/final/$dataset \
+    --k $k \
+    --dataset_name $dataset \
+    --batch_size 5 \
+    --knn_temp $knn_tmp \
+    --k_shot 0 \
+    --sim_func do_not_recomp_l2 \
+    --scoring softmax
 ```
 
 TBC

@@ -1,5 +1,4 @@
 # kNN_prompt
-# knnlm
 I include an example script of running kNN-LM on RTE dataset. The datastore is built upon wikitext-103.
 
 ## write datastore file

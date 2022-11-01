@@ -2,8 +2,8 @@ from options import Options
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from dstore.save_dstore import load_data, save_dstore
 from dstore.dstore import KNN_Dstore
-from data.test_data_sfc_final import load_test_data
-from score_sfc_final_original import EvaluatingWrapper
+from data.test_data import load_test_data
+from score import EvaluatingWrapper
 import logging
 from pathlib import Path
 import os

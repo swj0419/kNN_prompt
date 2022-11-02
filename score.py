@@ -311,6 +311,8 @@ class EvaluatingWrapper():
         klambda2all_acc = self.compute_acc(klambda2all_pred_standard, all_label)
         klambda2all_acc_pmi = self.compute_acc(klambda2all_pred_pmi_standard, all_label)
         print(f"standard LM (lm/pmi) acc: {klambda2all_acc[0]}/{klambda2all_acc_pmi[0]}")
+        print(f"standard kNN-LM acc: {klambda2all_acc[0.3]}")
+
 
         # LM acc
         print("=============kNN-LM========================")
